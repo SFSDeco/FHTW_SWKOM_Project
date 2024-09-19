@@ -1,26 +1,38 @@
 package at.fhtw.rest.api;
 
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import at.fhtw.rest.persistence.entity.Document;
+import at.fhtw.rest.persistence.repositories.DocumentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping(path = "test")
+@RequestMapping(path = "document")
 @CrossOrigin(origins = "*")
 public class ApiController {
-    @GetMapping
-    public List<String> getNames() {
-        List<String> stringList = new ArrayList<>();
-        stringList.add("Hallo");
-        stringList.add("Wie");
-        stringList.add("schwimmt");
-        stringList.add("man?");
 
-        return stringList;
+    @Autowired
+    private DocumentRepository repository;
+
+
+    @GetMapping("/all")
+    public Map<Long, Document> getAllDocuments() {
+        return repository.findAll();
+    }
+
+    @PostMapping("/{document}")
+    public ResponseEntity<Document> uploadDocument(@PathVariable String document){
+        Document inserted = repository.saveDocument(Document.builder()
+                .id(repository.nextId())
+                .name(document)
+                .build());
+
+        return new ResponseEntity<>(inserted, HttpStatus.OK);
     }
 }
