@@ -1,0 +1,46 @@
+{
+	"info": {
+		"_postman_id": "d76f3a25-26a6-418c-87f9-41391778e17b",
+		"name": "DocumentManager",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "33297197"
+	},
+	"item": [
+		{
+			"name": "AddTestDocument1",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "http://localhost:8081/document/test1"
+			},
+			"response": []
+		},
+		{
+			"name": "AddTestDocument2",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "http://localhost:8081/document/test2"
+			},
+			"response": []
+		},
+		{
+			"name": "AddTestDocument3",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "http://localhost:8081/document/test3"
+			},
+			"response": []
+		},
+		{
+			"name": "Document_GetAll",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8081/document/all"
+			},
+			"response": []
+		}
+	]
+}
