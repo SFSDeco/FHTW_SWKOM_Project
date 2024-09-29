@@ -19,3 +19,11 @@ services:
     command: ["java", "-jar", "/app/rest-application.jar"]
     depends_on:
       - postgres
+  angular-frontend:
+    build: frontend/webpage
+    container_name: webpage-container
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - rest-server
