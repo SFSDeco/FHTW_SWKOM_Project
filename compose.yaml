@@ -10,7 +10,7 @@ services:
     ports:
       - '5432:5432'
   rest-server:
-    build:  .
+    build: backend/rest
     container_name: rest-server-container
     ports:
       - "8081:8081"
