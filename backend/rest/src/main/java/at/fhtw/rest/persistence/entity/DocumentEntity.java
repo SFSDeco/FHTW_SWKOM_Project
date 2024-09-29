@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Document {
+public class DocumentEntity {
     String name;
     Long id;
 }

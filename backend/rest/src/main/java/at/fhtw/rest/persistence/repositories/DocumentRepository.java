@@ -1,6 +1,6 @@
 package at.fhtw.rest.persistence.repositories;
 
-import at.fhtw.rest.persistence.entity.Document;
+import at.fhtw.rest.persistence.entity.DocumentEntity;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
@@ -17,11 +17,11 @@ public class DocumentRepository {
         return currentId;
     }
 
-    private final Map<Long, Document> documents = new HashMap<>();
-    public Document saveDocument(Document document){
-        documents.put(document.getId(), document);
-        return document;
+    private final List<DocumentEntity> documents = new ArrayList<>();
+    public DocumentEntity saveDocument(DocumentEntity documentEntity){
+        documents.add(documentEntity);
+        return documentEntity;
     }
-    public Map<Long, Document> findAll() {return documents;}
+    public List<DocumentEntity> findAll() {return documents;}
 
 }
