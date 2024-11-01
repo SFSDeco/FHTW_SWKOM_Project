@@ -12,6 +12,7 @@ public class DocumentMapper extends AbstractMapper<DocumentEntity, DocumentDto>{
         return DocumentDto.builder()
                 .id(source.getId())
                 .name(source.getName())
+                .content(source.getContent())
                 .build();
     }
 }

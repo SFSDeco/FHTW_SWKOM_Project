@@ -19,6 +19,9 @@ services:
     command: ["java", "-jar", "/app/rest-application.jar"]
     depends_on:
       - postgres
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
   angular-frontend:
     build: frontend/webpage
     container_name: webpage-container
