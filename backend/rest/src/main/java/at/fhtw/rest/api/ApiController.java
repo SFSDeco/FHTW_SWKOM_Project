@@ -24,7 +24,7 @@ public class ApiController {
 
 
     @GetMapping("/all")
-    public String getAllDocuments() {
+    public List<DocumentDto> getAllDocuments() {
         return documentService.getAllDocuments();
     }
 

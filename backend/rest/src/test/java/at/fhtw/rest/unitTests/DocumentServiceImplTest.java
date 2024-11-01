@@ -37,7 +37,7 @@ public class DocumentServiceImplTest {
         when(documentRepository.findAll()).thenReturn(Collections.emptyList());
 
         // Act: Rufe die Methode auf
-        String result = documentService.getAllDocuments();
+        String result = documentService.getAllDocuments().toString();
 
         // Assert: Stelle sicher, dass das Ergebnis korrekt ist
         assertEquals("[]", result);

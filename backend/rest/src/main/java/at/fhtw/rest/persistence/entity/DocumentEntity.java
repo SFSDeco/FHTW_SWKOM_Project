@@ -18,7 +18,6 @@ import jakarta.validation.constraints.NotNull;
 @Data
 public class DocumentEntity {
     @Id
-    @NotNull(message = "Document ID cannot be null")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
