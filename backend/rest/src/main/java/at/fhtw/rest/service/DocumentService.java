@@ -7,7 +7,7 @@ import java.util.List;
 
 
 public interface DocumentService {
-    void saveDocument(String documentDto);
+    void saveDocument(String documentDto); //für file ändern
     List<DocumentDto> getAllDocuments();
 
 }

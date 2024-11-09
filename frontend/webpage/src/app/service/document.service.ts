@@ -19,8 +19,13 @@ export class DocumentService {
     return this.http.get<Document[]>(url);
   }
 
-  public addDocument(document : Document){
-    const url : string = `${this.docsUrl}/${document.name}`
-    return this.http.post<Document>(url, document);
+  public addDocument(formData : FormData){
+    const documentName = formData.get('name');
+    if (typeof documentName === 'string') {
+      const url = `${this.docsUrl}/${documentName}`;
+      return this.http.post(url, formData);
+    } else {
+      throw new Error("Document name is missing or invalid in FormData.");
+    }
   }
 }
