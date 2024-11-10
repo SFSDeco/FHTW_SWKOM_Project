@@ -2,7 +2,6 @@ package at.fhtw.rest.api;
 
 
 import at.fhtw.rest.persistence.entity.DocumentEntity;
-import at.fhtw.rest.persistence.repositories.DocumentRepository;
 import at.fhtw.rest.service.DocumentService;
 import at.fhtw.rest.service.dtos.DocumentDto;
 import at.fhtw.rest.service.rabbitmq.DocumentProducer;
