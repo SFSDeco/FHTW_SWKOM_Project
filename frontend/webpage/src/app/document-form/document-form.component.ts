@@ -10,14 +10,23 @@ import { Document } from "../model/document";
 })
 export class DocumentFormComponent {
 
-  document!: Document;
+  document! : Document;
 
   constructor(private route: ActivatedRoute, private router: Router, private documentService: DocumentService) {
     this.document = new Document();
   }
 
+  onFileSelected(event: any): void{
+    this.document.selectedFile = event.target.files[0];
+  }
+
   onSubmit() {
-    this.documentService.addDocument(this.document).subscribe(result => this.goToDocumentList());
+    if (this.document.selectedFile){
+      const formData = new FormData();
+      formData.append('name',this.document.name);
+      formData.append('file',this.document.selectedFile);
+      this.documentService.addDocument(formData).subscribe(result => this.goToDocumentList());
+    }
   }
 
   goToDocumentList() {

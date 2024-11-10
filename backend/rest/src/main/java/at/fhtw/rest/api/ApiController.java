@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.*;
 
 @RestController
@@ -29,8 +31,9 @@ public class ApiController {
     }
 
     @PostMapping("/{document}")
-    public ResponseEntity<DocumentEntity> uploadDocument(@PathVariable String document) {
-        documentService.saveDocument(document);
+    public ResponseEntity<DocumentEntity> uploadDocument(@PathVariable("document") String documentName,
+                                                         @RequestParam("file") MultipartFile file) {
+        documentService.saveDocument(documentName);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

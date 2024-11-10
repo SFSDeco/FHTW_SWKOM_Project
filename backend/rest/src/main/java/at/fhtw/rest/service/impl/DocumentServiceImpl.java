@@ -20,7 +20,7 @@ public class DocumentServiceImpl implements DocumentService {
     private DocumentMapper documentMapper;
 
     @Override
-    public void saveDocument(String documentDto) {
+    public void saveDocument(String documentDto) { //file dann noch hinzufügen
         DocumentEntity documentEntity = DocumentEntity.builder()
                 .name(documentDto)
                 .content("TestContent")
