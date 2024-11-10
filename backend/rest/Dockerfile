@@ -2,8 +2,8 @@ FROM openjdk:17-jdk-alpine
 
 WORKDIR /app
 
-COPY target/rest-0.0.3-SNAPSHOT.jar /app/rest-0.0.3-SNAPSHOT.jar
+COPY target/rest-0.0.4-SNAPSHOT.jar /app/rest-0.0.4-SNAPSHOT.jar
 
 EXPOSE 8081
 
-ENTRYPOINT ["java", "-jar", "rest-0.0.3-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "rest-0.0.4-SNAPSHOT.jar"]

@@ -9,6 +9,7 @@ services:
       - 'POSTGRES_USER=myuser'
     ports:
       - '5432:5432'
+
   rest-server:
     build: backend/rest
     container_name: rest-server-container
@@ -19,8 +20,11 @@ services:
     command: ["java", "-jar", "/app/rest-application.jar"]
     depends_on:
       - postgres
+      - rabbitmq
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
 
   angular-frontend:
     build: frontend/webpage
@@ -30,3 +34,13 @@ services:
     depends_on:
       - postgres
       - rest-server
+
+  rabbitmq:
+    image: 'rabbitmq:3-management'
+    container_name: rabbitmq-container
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - '5672:5672'
+      - '15672:15672'

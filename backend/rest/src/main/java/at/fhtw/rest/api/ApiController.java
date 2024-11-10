@@ -5,6 +5,7 @@ import at.fhtw.rest.persistence.entity.DocumentEntity;
 import at.fhtw.rest.persistence.repositories.DocumentRepository;
 import at.fhtw.rest.service.DocumentService;
 import at.fhtw.rest.service.dtos.DocumentDto;
+import at.fhtw.rest.service.rabbitmq.DocumentProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +17,12 @@ import java.util.*;
 @CrossOrigin(origins = "*")
 public class ApiController {
 
+    private final DocumentProducer documentProducer;
+
     @Autowired
-    private DocumentRepository repository;
+    public ApiController(DocumentProducer documentProducer){
+        this.documentProducer = documentProducer;
+    }
 
     @Autowired
     private DocumentService documentService;
@@ -31,6 +36,7 @@ public class ApiController {
     @PostMapping("/{document}")
     public ResponseEntity<DocumentEntity> uploadDocument(@PathVariable String document) {
         documentService.saveDocument(document);
+        documentProducer.sendDocumentEvent("Document created: " + document);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
