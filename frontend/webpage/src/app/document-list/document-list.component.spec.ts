@@ -10,6 +10,7 @@ describe('DocumentListComponent', () => {
     TestBed.configureTestingModule({
       declarations: [DocumentListComponent]
     });
+
     fixture = TestBed.createComponent(DocumentListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
