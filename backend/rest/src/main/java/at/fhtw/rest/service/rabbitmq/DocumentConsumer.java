@@ -1,4 +1,4 @@
-package at.fhtw.rest.service.rabbitmq;
+/*package at.fhtw.rest.service.rabbitmq;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
@@ -10,3 +10,4 @@ public class DocumentConsumer {
         System.out.println("Received message: " + documentMessage);
     }
 }
+*/
