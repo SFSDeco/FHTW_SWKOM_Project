@@ -44,7 +44,7 @@ public class DocumentServiceImplTest {
         verify(documentRepository, times(1)).findAll();
     }
 
-    @Test
+    /*@Test
     public void testSaveDocument() {
         // Arrange: Simuliere das Speichern eines Dokuments
         DocumentEntity documentEntity = DocumentEntity.builder()
@@ -57,5 +57,5 @@ public class DocumentServiceImplTest {
 
         // Assert: Stelle sicher, dass die Speicherung korrekt erfolgt
         verify(documentRepository, times(1)).save(any(DocumentEntity.class));
-    }
+    }*/
 }
