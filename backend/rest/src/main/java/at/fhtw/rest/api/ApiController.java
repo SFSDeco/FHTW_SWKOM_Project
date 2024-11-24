@@ -38,7 +38,7 @@ public class ApiController {
     public ResponseEntity<DocumentEntity> uploadDocument(@PathVariable("document") String documentName,
                                                          @RequestParam("file") MultipartFile file) {
 
-        documentService.saveDocument(documentName);
+        documentService.saveDocument(documentName, file);
         documentProducer.sendDocumentEvent("Document created: " + documentName);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
