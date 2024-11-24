@@ -22,6 +22,7 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+      - minio
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_RABBITMQ_HOST=rabbitmq
