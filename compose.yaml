@@ -75,3 +75,17 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200/
     ports:
       - "9092:5601"
+
+  ocrworker:
+      build:
+        context: ./backend/ocrworker
+        dockerfile: Dockerfile
+      container_name: ocr_worker_container
+      depends_on:
+        - rabbitmq
+      environment:
+        - RABBITMQ_HOST=rabbitmq
+        - RABBITMQ_PORT=5672
+      volumes:
+        - ./backend/ocrworker/ocrworker.py:/app/ocrworker.py
+      command: ["python", "ocrworker.py"]

@@ -2,13 +2,14 @@
 
 import pika
 import time
+import os
 
 # RabbitMQ Configuration
 QUEUE_NAME = "documentQueue"
 EXCHANGE_NAME = "documentExchange"
 ROUTING_KEY = "document.routingKey"
-RABBITMQ_HOST = "localhost"  # Use the service name defined in docker-compose
-RABBITMQ_PORT = 15672        # Default port for RabbitMQ
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')  # Use the service name defined in docker-compose
+RABBITMQ_PORT = int(os.getenv('RABBITMQ_PORT', 5672))        # Default port for RabbitMQ
 
 # Callback function to handle incoming messages
 def on_message(channel, method, properties, body):
@@ -30,7 +31,9 @@ def start_ocr_worker():
     while True:
         try:
             # Connect to RabbitMQ
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost", port=5672))
+            connection = pika.BlockingConnection(
+                pika.ConnectionParameters(host=RABBITMQ_HOST, port=RABBITMQ_PORT)
+            )
             channel = connection.channel()
 
             # Declare the queue (to ensure it exists)
