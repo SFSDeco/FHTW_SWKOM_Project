@@ -83,9 +83,16 @@ services:
       container_name: ocr_worker_container
       depends_on:
         - rabbitmq
+        - minio
+        - rest-server
       environment:
         - RABBITMQ_HOST=rabbitmq
         - RABBITMQ_PORT=5672
+        - MINIO_HOST=minio
+        - MINIO_PORT=9000
+        - ELASTICSEARCH_HOST=elasticsearch
+        - ELASTICSEARCH_PORT=9200
       volumes:
         - ./backend/ocrworker/ocrworker.py:/app/ocrworker.py
       command: ["python", "ocrworker.py"]
+      restart: always
