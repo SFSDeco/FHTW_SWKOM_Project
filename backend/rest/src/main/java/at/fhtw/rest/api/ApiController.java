@@ -20,13 +20,14 @@ public class ApiController {
 
     private final DocumentProducer documentProducer;
 
-    @Autowired
-    public ApiController(DocumentProducer documentProducer){
-        this.documentProducer = documentProducer;
-    }
+    private final DocumentService documentService;
 
     @Autowired
-    private DocumentService documentService;
+    public ApiController(DocumentProducer documentProducer, DocumentService documentService) {
+
+        this.documentProducer = documentProducer;
+        this.documentService = documentService;
+    }
 
 
     @GetMapping("/all")
