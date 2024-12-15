@@ -1,6 +1,4 @@
 package at.fhtw.rest.service.impl;
-
-import at.fhtw.rest.service.rabbitmq.DocumentProducer;
 import lombok.extern.log4j.Log4j2;
 
 

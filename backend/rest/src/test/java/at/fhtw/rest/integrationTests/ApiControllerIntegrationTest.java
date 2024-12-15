@@ -1,67 +1,115 @@
 package at.fhtw.rest.integrationTests;
 
-import net.bytebuddy.utility.dispatcher.JavaDispatcher;
+import at.fhtw.rest.RestApplication;
+import at.fhtw.rest.api.ApiController;
+import at.fhtw.rest.persistence.entity.DocumentEntity;
+import at.fhtw.rest.service.DocumentService;
+import at.fhtw.rest.service.dtos.DocumentDto;
+import at.fhtw.rest.service.rabbitmq.DocumentProducer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+import java.util.Collections;
+import java.util.List;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+
+@SpringBootTest(classes = RestApplication.class)
 @Testcontainers
 public class ApiControllerIntegrationTest {
 
     @Container
-    public static final GenericContainer<?> minio = new GenericContainer<>(DockerImageName.parse("minio/minio"))
-            .withExposedPorts(9000, 9090)
-            .withCommand("server --console-address \":9090\" /data");
-
-    @Container
-    public static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
-            .withDatabaseName("mydatabase")
-            .withUsername("myuser")
-            .withPassword("secret");
-
-    @Container
-    public static final RabbitMQContainer rabbitMQContainer = new RabbitMQContainer("rabbitmq:3-management")
-            .withExposedPorts(5672, 15672);
+    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");
 
     @Autowired
-    private MockMvc mockMvc;
+    private ApiController apiController;
 
-    @Autowired
+    @MockBean
     private DocumentService documentService;
 
-    @Test
-    public void testGetAllDocuments() throws Exception {
-        // Arrange
-        DocumentDto documentDto1 = new DocumentDto(1L, "Document 1", "minio/path/to/document1");
-        DocumentDto documentDto2 = new DocumentDto(2L, "Document 2", "minio/path/to/document2");
+    @MockBean
+    private DocumentProducer documentProducer;
 
-        // Mock service call
-        when(documentService.getAllDocuments()).thenReturn(List.of(documentDto1, documentDto2));
 
-        // Act & Assert
-        mockMvc.perform(get("/document/all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Document 1"))
-                .andExpect(jsonPath("$[1].name").value("Document 2"));
+    @DynamicPropertySource
+    static void properties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
+        registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
+    }
 
-        verify(documentService, times(1)).getAllDocuments();
+    @BeforeEach
+    void setup() {
+        // Clear any mocks if necessary
+        Mockito.reset(documentService, documentProducer);
     }
 
     @Test
-    public void testUploadDocument() throws Exception {
+    void connectionToDatabase() {
+        assertThat(postgreSQLContainer.isCreated()).isTrue();
+        assertThat(postgreSQLContainer.isRunning()).isTrue();
+    }
+
+    @Test
+    void testGetAllDocuments() {
         // Arrange
-        String documentName = "Test Document";
-        MockMultipartFile file = new MockMultipartFile("file", "testfile.txt", "text/plain", "test content".getBytes());
+        DocumentDto documentDto = new DocumentDto();
+        documentDto.setName("Sample Document");
+        when(documentService.getAllDocuments()).thenReturn(Collections.singletonList(documentDto));
 
-        // Act & Assert
-        mockMvc.perform(multipart("/document/{document}", documentName)
-                        .file(file)
-                        .param("file", "testfile.txt"))
-                .andExpect(status().isCreated());
+        // Act
+        List<DocumentDto> result = apiController.getAllDocuments();
 
-        // Verify interaction with the service
-        verify(documentService, times(1)).saveDocument(eq(documentName), eq(file));
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.get(0).getName()).isEqualTo("Sample Document");
+        verify(documentService).getAllDocuments();
+    }
+
+    @Test
+    void testUploadDocument() {
+        // Arrange
+        String documentName = "TestDocument";
+        MockMultipartFile mockFile = new MockMultipartFile("file", "test.txt", "text/plain", "Sample content".getBytes());
+        Mockito.doNothing().when(documentService).saveDocument(any(), any());
+
+        // Act
+        ResponseEntity<DocumentEntity> response = apiController.uploadDocument(documentName, mockFile);
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        verify(documentService).saveDocument(documentName, mockFile);
+        verify(documentProducer).sendDocumentEvent("Document created: " + documentName);
+    }
+
+    @Test
+    void testUploadDocumentWithEmptyFile() {
+        // Arrange
+        String documentName = "TestDocument";
+        MockMultipartFile mockFile = new MockMultipartFile("file", "", "text/plain", new byte[0]);
+
+        // Act
+        ResponseEntity<DocumentEntity> response = apiController.uploadDocument(documentName, mockFile);
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        verify(documentService).saveDocument(documentName, mockFile);
+        verify(documentProducer).sendDocumentEvent("Document created: " + documentName);
     }
 }
