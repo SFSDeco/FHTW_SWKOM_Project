@@ -17,7 +17,7 @@ public class DocumentEntityTest {
 
     private Validator validator;
 
-    /*@BeforeEach
+    @BeforeEach
     public void setUp() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
@@ -58,5 +58,5 @@ public class DocumentEntityTest {
         violations.forEach(violation -> {
             System.out.println(violation.getMessage());
         });
-    }*/
+    }
 }

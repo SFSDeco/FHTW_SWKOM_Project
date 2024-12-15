@@ -1,9 +1,14 @@
 package at.fhtw.rest.service.minio;
 
+import at.fhtw.rest.service.rabbitmq.DocumentProducer;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.*;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,8 +17,11 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
+@Log4j2
 @Service
 public class MinIOService {
+
+    private static final Logger logger = LoggerFactory.getLogger(MinIOService.class);
 
 
     @Autowired
@@ -50,6 +58,7 @@ public class MinIOService {
         } catch (IOException | ErrorResponseException | InsufficientDataException | InternalException |
                  InvalidKeyException | InvalidResponseException | NoSuchAlgorithmException | ServerException |
                  XmlParserException e) {
+            logger.error("Error uploading file to MinIO. FileName: {}, Error: {}", fileName, e.getMessage(), e);
             throw new RuntimeException("Error uploading file to MinIO", e);
         }
     }

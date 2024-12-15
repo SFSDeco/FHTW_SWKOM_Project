@@ -1,5 +1,8 @@
 package at.fhtw.rest.service.impl;
 
+import at.fhtw.rest.service.rabbitmq.DocumentProducer;
+import lombok.extern.log4j.Log4j2;
+
 
 import at.fhtw.rest.persistence.entity.DocumentEntity;
 import at.fhtw.rest.persistence.repositories.DocumentRepository;
@@ -7,6 +10,8 @@ import at.fhtw.rest.service.DocumentService;
 import at.fhtw.rest.service.dtos.DocumentDto;
 import at.fhtw.rest.service.mapper.DocumentMapper;
 import at.fhtw.rest.service.minio.MinIOService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
+@Log4j2
 @Component
 public class DocumentServiceImpl implements DocumentService {
     @Autowired
@@ -22,6 +28,8 @@ public class DocumentServiceImpl implements DocumentService {
     private DocumentMapper documentMapper;
     @Autowired
     private MinIOService minioService;
+
+    private static final Logger logger = LoggerFactory.getLogger(DocumentServiceImpl.class);
 
     @Override
     public void saveDocument(String documentDto, MultipartFile file) {
@@ -38,7 +46,7 @@ public class DocumentServiceImpl implements DocumentService {
             documentMapper.mapToDto(documentRepository.save(documentEntity));
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error uploading file to MinIO", e); // Use logger instead of printStackTrace
             throw new RuntimeException("Error uploading file to MinIO", e);
         }
     }

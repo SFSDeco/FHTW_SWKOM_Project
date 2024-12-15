@@ -43,13 +43,4 @@ public class ApiController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    /*@PostMapping("/{document}")
-    public ResponseEntity<DocumentEntity> uploadDocument(@PathVariable String document){
-        DocumentEntity inserted = repository.saveDocument(DocumentEntity.builder()
-                .id(repository.nextId())
-                .name(document)
-                .build());
-
-        return new ResponseEntity<>(inserted, HttpStatus.OK);
-    }*/
 }
