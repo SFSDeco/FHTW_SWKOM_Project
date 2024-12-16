@@ -65,6 +65,8 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - logger.level=ERROR
     ports:
       - "9200:9200"
 
@@ -95,4 +97,3 @@ services:
       volumes:
         - ./backend/ocrworker/ocrworker.py:/app/ocrworker.py
       command: ["python", "ocrworker.py"]
-      restart: always
