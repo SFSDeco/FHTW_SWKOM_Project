@@ -1,0 +1,13 @@
+<div class="card my-5">
+  <div class="card-body">
+    <table>
+      <tr *ngFor="let document of documents">
+        <td>{{ document.name }}</td>
+        <td>
+          <button (click)="downloadFile(document.id)">Download</button>
+          <button (click)="openFile(document.id)">Open</button>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
