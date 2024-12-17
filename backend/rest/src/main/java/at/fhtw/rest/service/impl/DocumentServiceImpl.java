@@ -45,9 +45,11 @@ public class DocumentServiceImpl implements DocumentService {
 
             String fileName = savedEntity.getId() + "_" + documentName;
 
-            String filePath = minioService.uploadDocument(fileName, file);
+            minioService.uploadDocument(fileName, file);
 
-            savedEntity.setContent(filePath);
+            savedEntity.setContent(fileName);
+
+            documentRepository.save(savedEntity);
 
             return documentMapper.mapToDto(savedEntity);
 

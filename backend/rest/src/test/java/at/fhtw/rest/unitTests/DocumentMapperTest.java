@@ -1,4 +1,4 @@
-/*package at.fhtw.rest.unitTests;
+package at.fhtw.rest.unitTests;
 
 import at.fhtw.rest.persistence.entity.DocumentEntity;
 import at.fhtw.rest.service.dtos.DocumentDto;
@@ -85,4 +85,4 @@ public class DocumentMapperTest {
         assertNotNull(documentDtos);
         assertTrue(documentDtos.isEmpty());
     }
-}*/
+}

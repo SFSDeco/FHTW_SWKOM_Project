@@ -1,4 +1,4 @@
-/*package at.fhtw.rest.integrationTests;
+package at.fhtw.rest.integrationTests;
 
 import at.fhtw.rest.RestApplication;
 import at.fhtw.rest.api.ApiController;
@@ -144,4 +144,4 @@ public class ApiControllerIntegrationTest {
         assertThat(capturedDto.getId()).isEqualTo(2L);
         assertThat(capturedDto.getName()).isEqualTo(documentName);
     }
-}*/
+}

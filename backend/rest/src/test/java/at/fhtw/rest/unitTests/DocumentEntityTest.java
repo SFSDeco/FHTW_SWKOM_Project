@@ -1,4 +1,4 @@
-/*package at.fhtw.rest.unitTests;
+package at.fhtw.rest.unitTests;
 import at.fhtw.rest.persistence.entity.DocumentEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,4 +59,4 @@ public class DocumentEntityTest {
             System.out.println(violation.getMessage());
         });
     }
-}*/
+}
