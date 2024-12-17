@@ -8,7 +8,6 @@ import java.util.List;
 
 
 public interface DocumentService {
-    void saveDocument(String documentDto, MultipartFile file); //für file ändern
+    DocumentDto saveDocument(String documentDto, MultipartFile file); //für file ändern
     List<DocumentDto> getAllDocuments();
-
 }

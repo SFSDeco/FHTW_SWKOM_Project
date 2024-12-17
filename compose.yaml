@@ -97,3 +97,4 @@ services:
       volumes:
         - ./backend/ocrworker/ocrworker.py:/app/ocrworker.py
       command: ["python", "ocrworker.py"]
+      restart: always

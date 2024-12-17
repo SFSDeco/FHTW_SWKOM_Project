@@ -1,5 +1,6 @@
 package at.fhtw.rest.service.rabbitmq;
 
+import at.fhtw.rest.service.dtos.DocumentDto;
 import lombok.extern.log4j.Log4j2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +20,18 @@ public class DocumentProducer {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void sendDocumentEvent(String documentMessage) {
-        log.info("Sent {} to RabbitMQ", documentMessage);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, documentMessage);
+    public void sendDocumentEvent(DocumentDto documentDto) {
+        try {
+            log.info("Sending DocumentDTO to RabbitMQ: {}", documentDto);
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE_NAME,
+                    RabbitMQConfig.ROUTING_KEY,
+                    documentDto
+            );
+            log.info("DocumentDTO sent successfully.");
+        } catch (Exception e) {
+            log.error("Failed to send DocumentDTO to RabbitMQ", e);
+            throw new RuntimeException("Failed to send DocumentDTO to RabbitMQ", e);
+        }
     }
 }

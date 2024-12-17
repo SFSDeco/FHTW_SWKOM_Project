@@ -30,18 +30,23 @@ public class DocumentServiceImpl implements DocumentService {
     private static final Logger logger = LoggerFactory.getLogger(DocumentServiceImpl.class);
 
     @Override
-    public void saveDocument(String documentDto, MultipartFile file) {
+    public DocumentDto saveDocument(String documentName, MultipartFile file) {
         try {
-            // Lade das Dokument in MinIO hoch
-            String filePath = minioService.uploadDocument(documentDto, file);
-
-
-            // Speichere das Dokument in der Datenbank
             DocumentEntity documentEntity = DocumentEntity.builder()
-                    .name(documentDto)
-                    .content(filePath)  // Hier ggf. den Dateipfad oder andere Informationen speichern
+                    .name(documentName)
+                    .content("") // Placeholder for file path, as upload happens later
                     .build();
-            documentMapper.mapToDto(documentRepository.save(documentEntity));
+
+            DocumentEntity savedEntity = documentRepository.save(documentEntity); // ID is generated here
+
+            String fileName = savedEntity.getId() + "_" + documentName;
+
+            String filePath = minioService.uploadDocument(fileName, file);
+
+            savedEntity.setContent(filePath);
+            DocumentEntity updatedEntity = documentRepository.save(savedEntity);
+
+            return documentMapper.mapToDto(updatedEntity);
 
         } catch (IOException e) {
             logger.error("Error uploading file to MinIO", e); // Use logger instead of printStackTrace
