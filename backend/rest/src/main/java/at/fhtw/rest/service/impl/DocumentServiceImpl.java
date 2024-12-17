@@ -12,12 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Log4j2
 @Component
@@ -89,6 +91,48 @@ public class DocumentServiceImpl implements DocumentService {
         // Lösche das Dokument aus der Datenbank
         documentRepository.delete(document);
     }
+    @Override
+    public void updateDocument(Long id, String name, MultipartFile file) {
+        DocumentEntity document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        document.setName(name);
+
+        if (file != null) {
+            try {
+                minioService.deleteDocument(document.getContent());
+                String filePath = document.getId() + "_" + document.getName();
+                minioService.uploadDocument(filePath, file);
+                document.setContent(filePath);
+            } catch (IOException e) {
+                throw new RuntimeException("Error uploading file", e);
+            }
+        }
+
+        documentRepository.save(document);
+    }
+    @Override
+    public ResponseEntity<DocumentDto> getDocument(Long id) {
+        Optional<DocumentEntity> document = documentRepository.findById(id);
+
+        // Überprüfen, ob das Dokument existiert
+        if (document.isPresent()) {
+            DocumentEntity documentEntity = document.get();
+
+            // Konvertieren der Entity in ein DTO
+            DocumentDto documentDto = documentMapper.mapToDto(documentEntity);
+
+
+            // Erfolgreiche Antwort zurückgeben
+            return ResponseEntity.ok(documentDto);
+        } else {
+            // Antwort, wenn das Dokument nicht gefunden wurde
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null); // Optional: Du kannst auch eine Fehlernachricht im Body zurückgeben
+        }
+    }
+
+
 
 
 

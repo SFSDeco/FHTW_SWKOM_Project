@@ -1,0 +1,15 @@
+<div class="container">
+  <h2>Update Document</h2>
+  <form (ngSubmit)="updateDocument()" #updateForm="ngForm">
+    <div class="form-group">
+      <label for="documentName">Document Name</label>
+      <input type="text" id="documentName" [(ngModel)]="document.name" name="name" required class="form-control">
+    </div>
+    <div class="form-group">
+      <label for="file">Upload New File (Optional)</label>
+      <input type="file" id="file" (change)="onFileChange($event)" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">Update</button>
+  </form>
+</div>
+

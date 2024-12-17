@@ -57,4 +57,18 @@ public class ApiController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Void> updateDocument(
+            @PathVariable Long id,
+            @RequestParam("name") String name,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+
+        documentService.updateDocument(id, name, file);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/file/{id}")
+    public ResponseEntity<DocumentDto> getDocument(@PathVariable Long id) {
+        return documentService.getDocument(id);
+    }
 }

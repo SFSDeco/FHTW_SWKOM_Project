@@ -65,7 +65,7 @@ class DocumentServiceImplTest {
         DocumentDto savedDocument = documentServiceImpl.saveDocument(documentName, mockFile);
 
         // Verify interactions
-        //verify(documentRepository).save(any(DocumentEntity.class));
+        verify(documentRepository, atLeastOnce()).save(any(DocumentEntity.class));
         verify(minIOService).uploadDocument(anyString(), eq(mockFile));
         verify(documentMapper).mapToDto(any(DocumentEntity.class));
 
