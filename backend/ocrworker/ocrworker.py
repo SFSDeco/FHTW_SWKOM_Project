@@ -2,13 +2,15 @@ import pika
 import time
 import os
 import logging
-from pdf2image import convert_from_path, convert_from_bytes
+import json
+from pdf2image import convert_from_bytes
 import pytesseract
-from PIL import Image
 from minio import Minio
 from elasticsearch import Elasticsearch
+
 from io import BytesIO
 
+# Configuration variables
 QUEUE_NAME = "documentQueue"
 EXCHANGE_NAME = "documentExchange"
 ROUTING_KEY = "document.routingKey"
@@ -29,6 +31,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+# MinIO client setup
 minio_client = Minio(
     f'{MINIO_HOST}:{MINIO_PORT}',
     access_key=MINIO_ACCESS_KEY,
@@ -36,8 +39,10 @@ minio_client = Minio(
     secure=False
 )
 
+# Elasticsearch client setup
 es = Elasticsearch([{'scheme': 'http', 'host': ELASTICSEARCH_HOST, 'port': ELASTICSEARCH_PORT}])
 
+# Process PDF using Tesseract
 def process_pdf_with_tesseract(pdf_data):
     try:
         images = convert_from_bytes(pdf_data)
@@ -52,46 +57,72 @@ def process_pdf_with_tesseract(pdf_data):
         logging.error(f"Error processing PDF with Tesseract: {e}")
         return ""
 
-def insert_into_elasticsearch(doc_id, text):
+# Insert extracted text into Elasticsearch
+def insert_into_elasticsearch(doc_id, text, document_name):
     try:
         document = {
-            "text": text,
+            "id": doc_id,           # Store the document ID
+            "name": document_name,  # Store the document name
+            "text": text,           # The extracted text
             "status": "processed",
             "source": "ocr_worker"
         }
+        # Index the document using its ID as the Elasticsearch document ID
         es.index(index="documents", id=doc_id, document=document)
-        logging.info(f"Inserted document with ID {doc_id} into Elasticsearch.")
+        logging.info(f"Inserted document with ID {doc_id} and name '{document_name}' into Elasticsearch.")
     except Exception as e:
         logging.error(f"Error inserting into Elasticsearch: {e}")
 
+# Download file from MinIO
 def download_file_from_minio(file_name):
     try:
         response = minio_client.get_object(MINIO_BUCKET_NAME, file_name)
-        logging.info(f"Downloaded file {file_name} from Minio.")
+        logging.info(f"Downloaded file {file_name} from MinIO.")
         return response.read()
     except Exception as e:
-        logging.error(f"Error downloading file from Minio: {e}")
+        logging.error(f"Error downloading file from MinIO: {e}")
         return None
 
+# Handle incoming RabbitMQ messages
 def on_message(channel, method, properties, body):
     try:
-        message = body.decode('utf-8')
-        logging.info(f"Received message: {message}")
-        if message.startswith("Document created: "):
-            document_name = message.replace("Document created: ", "")
-            logging.info(f"Extracted Document Name: {document_name}")
-            pdf_data = download_file_from_minio(document_name)
-            if pdf_data:
-                extracted_text = process_pdf_with_tesseract(pdf_data)
-                insert_into_elasticsearch(document_name, extracted_text)
-            else:
-                logging.error(f"Failed to process {document_name} as it could not be downloaded from Minio.")
+        # Deserialize the JSON message into a DocumentDTO
+        document_dto = json.loads(body.decode('utf-8'))
+        logging.info(f"Received DocumentDTO: {document_dto}")
+
+        # Extract document ID and name
+        document_id = document_dto.get("id")
+        document_name = document_dto.get("name")
+
+        if not document_id or not document_name:
+            logging.error("Invalid DocumentDTO: Missing 'id' or 'name'")
+            channel.basic_ack(delivery_tag=method.delivery_tag)
+            return
+
+        # Reconstruct the file name based on ID and name
+        file_name = f"{document_id}_{document_name}"
+        logging.info(f"Processing file: {file_name}")
+
+        # Download file from MinIO
+        pdf_data = download_file_from_minio(file_name)
+        if pdf_data:
+            # Process the PDF to extract text
+            extracted_text = process_pdf_with_tesseract(pdf_data)
+            # Insert text into Elasticsearch
+            insert_into_elasticsearch(document_id, extracted_text, document_name)
         else:
-            logging.error("Unrecognized message format")
+            logging.error(f"Failed to download file {file_name} from MinIO.")
+
+        channel.basic_ack(delivery_tag=method.delivery_tag)
+
+    except json.JSONDecodeError as e:
+        logging.error(f"Failed to decode message: {e}")
         channel.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
         logging.error(f"Error processing message: {e}")
+        channel.basic_ack(delivery_tag=method.delivery_tag)
 
+# Start the OCR Worker
 def start_ocr_worker():
     retry_interval = 5
     connection = None

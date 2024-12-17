@@ -1,13 +1,13 @@
-/*package at.fhtw.rest.unitTests;
+package at.fhtw.rest.unitTests;
 
 import at.fhtw.rest.persistence.entity.DocumentEntity;
 import at.fhtw.rest.persistence.repositories.DocumentRepository;
 import at.fhtw.rest.service.dtos.DocumentDto;
-import at.fhtw.rest.service.impl.DocumentServiceImpl;
 import at.fhtw.rest.service.mapper.DocumentMapper;
 import at.fhtw.rest.service.minio.MinIOService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -20,7 +20,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class DocumentServiceImplTest {
+class DocumentServiceImplTest {
 
     @Mock
     private DocumentRepository documentRepository;
@@ -29,107 +29,109 @@ public class DocumentServiceImplTest {
     private DocumentMapper documentMapper;
 
     @Mock
-    private MinIOService minioService;
+    private MinIOService minIOService;
 
     @InjectMocks
-    private DocumentServiceImpl documentService;
+    private DocumentServiceImpl documentServiceImpl;
+
+    @Mock
+    private MultipartFile mockFile;
+
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testSaveDocument_Success() throws IOException {
-        // Arrange
-        String documentName = "Test Document";
-        String filePath = "minio/path/to/document";
-        MultipartFile file = mock(MultipartFile.class);
-
-        when(minioService.uploadDocument(documentName, file)).thenReturn(filePath);
-
-        DocumentEntity savedEntity = DocumentEntity.builder()
+    void testSaveDocument_success() throws IOException {
+        String documentName = "testDocument.pdf";
+        String filePath = "path/to/file";
+        DocumentEntity documentEntity = DocumentEntity.builder()
+                .id(1L)
                 .name(documentName)
-                .content(filePath)
+                .content("") // Initially empty, to be set after upload
                 .build();
 
-        when(documentRepository.save(any(DocumentEntity.class))).thenReturn(savedEntity);
+        DocumentDto documentDto = new DocumentDto(1L, documentName, filePath);
 
-        DocumentDto documentDto = DocumentDto.builder()
-                .name(documentName)
-                .content(filePath)
-                .build();
-
+        // Mocking repository and MinIO service behavior
+        when(documentRepository.save(any(DocumentEntity.class))).thenReturn(documentEntity);
+        when(minIOService.uploadDocument(anyString(), eq(mockFile))).thenReturn(filePath);
         when(documentMapper.mapToDto(any(DocumentEntity.class))).thenReturn(documentDto);
 
-        // Act
-        documentService.saveDocument(documentName, file);
+        // Call the service method
+        DocumentDto savedDocument = documentServiceImpl.saveDocument(documentName, mockFile);
 
-        // Assert
-        verify(minioService, times(1)).uploadDocument(documentName, file);
-        verify(documentRepository, times(1)).save(any(DocumentEntity.class));
-        verify(documentMapper, times(1)).mapToDto(any(DocumentEntity.class));
+        // Verify interactions
+        verify(documentRepository).save(any(DocumentEntity.class));
+        verify(minIOService).uploadDocument(anyString(), eq(mockFile));
+        verify(documentMapper).mapToDto(any(DocumentEntity.class));
+
+        // Assert the result
+        assertNotNull(savedDocument);
+        assertEquals(1L, savedDocument.getId());
+        assertEquals(documentName, savedDocument.getName());
+        assertEquals(filePath, savedDocument.getContent());
     }
 
     @Test
-    public void testSaveDocument_ThrowsExceptionOnMinIOFailure() throws IOException {
+    void testSaveDocument_failure_onMinIO() throws IOException {
         // Arrange
-        String documentName = "Test Document";
+        String documentName = "testDocument.pdf";
         MultipartFile file = mock(MultipartFile.class);
 
-        when(minioService.uploadDocument(documentName, file)).thenThrow(new IOException("MinIO upload failed"));
+        // Mock DocumentRepository save method
+        DocumentEntity mockEntity = DocumentEntity.builder()
+                .id(1L)
+                .name(documentName)
+                .content("")  // Placeholder for file path
+                .build();
+        when(documentRepository.save(any(DocumentEntity.class))).thenReturn(mockEntity);
+
+        // Simulate MinIO failure (e.g., IOException)
+        when(minIOService.uploadDocument(anyString(), eq(file)))
+                .thenThrow(new IOException("MinIO upload failed"));
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                documentService.saveDocument(documentName, file));
+        try {
+            documentServiceImpl.saveDocument(documentName, file);
+            fail("Expected RuntimeException due to MinIO failure");
+        } catch (RuntimeException e) {
+            assertEquals("Error uploading file to MinIO", e.getMessage());
+        }
 
-        assertEquals("Error uploading file to MinIO", exception.getMessage());
-        verify(minioService, times(1)).uploadDocument(documentName, file);
-        verify(documentRepository, never()).save(any(DocumentEntity.class));
+        // Verify interactions with the mocks
+        verify(documentRepository).save(any(DocumentEntity.class));  // Ensure save was called
+        verify(minIOService).uploadDocument(anyString(), eq(file));  // Ensure uploadDocument was called
     }
 
     @Test
-    public void testGetAllDocuments_ReturnsEmptyList() {
-        // Arrange
-        when(documentRepository.findAll()).thenReturn(Collections.emptyList());
-        when(documentMapper.mapToDto(Collections.emptyList())).thenReturn(Collections.emptyList());
-
-        // Act
-        List<DocumentDto> result = documentService.getAllDocuments();
-
-        // Assert
-        assertTrue(result.isEmpty());
-        verify(documentRepository, times(1)).findAll();
-        verify(documentMapper, times(1)).mapToDto(Collections.emptyList());
-    }
-
-    @Test
-    public void testGetAllDocuments_ReturnsListOfDocuments() {
-        // Arrange
+    void testGetAllDocuments() {
         DocumentEntity documentEntity = DocumentEntity.builder()
-                .name("Document 1")
-                .content("minio/path/to/document1")
+                .id(1L)
+                .name("testDocument.pdf")
+                .content("path/to/file")
                 .build();
 
-        List<DocumentEntity> entities = List.of(documentEntity);
-        when(documentRepository.findAll()).thenReturn(entities);
+        DocumentDto documentDto = new DocumentDto(1L, "testDocument.pdf", "path/to/file");
 
-        DocumentDto documentDto = DocumentDto.builder()
-                .name("Document 1")
-                .content("minio/path/to/document1")
-                .build();
+        // Mock repository behavior
+        when(documentRepository.findAll()).thenReturn(Collections.singletonList(documentEntity));
 
-        when(documentMapper.mapToDto(entities)).thenReturn(List.of(documentDto));
+        // Mock mapping behavior for the list
+        when(documentMapper.mapToDto(anyList())).thenReturn(Collections.singletonList(documentDto));
 
-        // Act
-        List<DocumentDto> result = documentService.getAllDocuments();
+        // Call the service method
+        List<DocumentDto> documents = documentServiceImpl.getAllDocuments();
 
-        // Assert
-        assertEquals(1, result.size());
-        assertEquals("Document 1", result.get(0).getName());
-        assertEquals("minio/path/to/document1", result.get(0).getContent());
+        // Verify interactions
+        verify(documentRepository).findAll();
+        verify(documentMapper).mapToDto(anyList());
 
-        verify(documentRepository, times(1)).findAll();
-        verify(documentMapper, times(1)).mapToDto(entities);
+        // Assert the result
+        assertNotNull(documents);
+        assertEquals(1, documents.size());
+        assertEquals("testDocument.pdf", documents.get(0).getName());
     }
-}*/
+}

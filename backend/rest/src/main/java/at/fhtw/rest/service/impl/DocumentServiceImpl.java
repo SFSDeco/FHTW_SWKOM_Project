@@ -34,7 +34,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 
     @Override
-    public void saveDocument(String documentName, MultipartFile file) {
+    public DocumentDto saveDocument(String documentName, MultipartFile file) {
         try {
             DocumentEntity documentEntity = DocumentEntity.builder()
                     .name(documentName)
@@ -45,11 +45,11 @@ public class DocumentServiceImpl implements DocumentService {
 
             String fileName = savedEntity.getId() + "_" + documentName;
 
-            String filePath = minioService.uploadDocument(documentName, file);
+            String filePath = minioService.uploadDocument(fileName, file);
 
             savedEntity.setContent(filePath);
 
-            //return documentMapper.mapToDto(savedEntity);
+            return documentMapper.mapToDto(savedEntity);
 
         } catch (IOException e) {
             logger.error("Error uploading file to MinIO", e); // Use logger instead of printStackTrace
