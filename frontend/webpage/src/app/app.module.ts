@@ -7,19 +7,21 @@ import { AppComponent } from './app.component';
 import { DocumentService } from "./service/document.service";
 import { DocumentFormComponent} from "./document-form/document-form.component";
 import { DocumentListComponent} from "./document-list/document-list.component";
+import { DownloadDocumentComponent } from './download-document/download-document.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     DocumentFormComponent,
-    DocumentListComponent
+    DocumentListComponent,
+    DownloadDocumentComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     FormsModule,
-    HttpClientModule
+    HttpClientModule,
   ],
   bootstrap: [AppComponent]
 })

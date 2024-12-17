@@ -1,8 +1,10 @@
 package at.fhtw.rest.service.minio;
 
 import at.fhtw.rest.service.rabbitmq.DocumentProducer;
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.errors.*;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.java.Log;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -60,6 +63,32 @@ public class MinIOService {
                  XmlParserException e) {
             logger.error("Error uploading file to MinIO. FileName: {}, Error: {}", fileName, e.getMessage(), e);
             throw new RuntimeException("Error uploading file to MinIO", e);
+        }
+    }
+
+    public byte[] downloadDocument(String filePath) {
+        try (InputStream stream = minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(properties.getBucketName())
+                        .object(filePath)
+                        .build())) {
+            return stream.readAllBytes();
+        } catch (Exception e) {
+            throw new RuntimeException("Error downloading file from MinIO", e);
+        }
+    }
+
+    public void deleteDocument(String filePath) throws IOException {
+        try {
+            RemoveObjectArgs args = RemoveObjectArgs.builder()
+                    .bucket(properties.getBucketName())
+                    .object(filePath)
+                    .build();
+
+
+            minioClient.removeObject(args);
+        } catch (Exception e) {
+            throw new IOException("Failed to delete document from MinIO", e);
         }
     }
 }

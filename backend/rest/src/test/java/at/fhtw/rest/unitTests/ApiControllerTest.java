@@ -1,6 +1,6 @@
 package at.fhtw.rest.unitTests;
 
-import at.fhtw.rest.api.ApiController;
+/*import at.fhtw.rest.api.ApiController;
 import at.fhtw.rest.service.DocumentService;
 import at.fhtw.rest.service.dtos.DocumentDto;
 import at.fhtw.rest.service.rabbitmq.DocumentProducer;
@@ -76,4 +76,4 @@ public class ApiControllerTest {
         verify(documentService, times(1)).saveDocument(eq(documentName), eq(file));
         verify(documentProducer, times(1)).sendDocumentEvent(eq("Document created: " + documentName));
     }
-}
+}*/

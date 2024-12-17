@@ -15,7 +15,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping(path = "document")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:8080")
 public class ApiController {
 
     private final DocumentProducer documentProducer;
@@ -42,6 +42,18 @@ public class ApiController {
         documentService.saveDocument(documentName, file);
         documentProducer.sendDocumentEvent("Document created: " + documentName);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @GetMapping("/download/{id}")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id) {
+        return documentService.getFile(id);
+    }
+
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+        documentService.deleteDocument(id);
+        return ResponseEntity.noContent().build();
     }
 
 }

@@ -28,4 +28,17 @@ export class DocumentService {
       throw new Error("Document name is missing or invalid in FormData.");
     }
   }
+  public getDocumentById(id: number): Observable<Document> {
+    return this.http.get<Document>(`${this.docsUrl}/file/${id}`);
+  }
+
+  public downloadFile(id: number): Observable<Blob> {
+    return this.http.get(`${this.docsUrl}/download/${id}`, { responseType: 'blob' });
+  }
+
+  deleteDocument(id: number): Observable<void> {
+    const url = `${this.docsUrl}/delete/${id}`;  // URL für den Löschaufruf
+    return this.http.delete<void>(url);
+  }
+
 }

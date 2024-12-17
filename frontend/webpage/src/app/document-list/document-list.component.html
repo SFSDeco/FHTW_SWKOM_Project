@@ -1,16 +1,34 @@
 <div class="card my-5">
   <div class="card-body">
-    <table class="table table-bordered table-striped">
+    <!-- Suchleiste -->
+    <div class="form-group">
+      <label for="search">Search Document by Name</label>
+      <input type="text" id="search" class="form-control" [(ngModel)]="searchQuery" (input)="onSearch()"
+             placeholder="Enter document name to search...">
+    </div>
+
+    <!-- Fehlermeldung, wenn kein Dokument gefunden wird -->
+    <div *ngIf="noDocumentFound" class="alert alert-danger">
+      No document found with that name.
+    </div>
+
+    <!-- Tabelle der Dokumente -->
+    <table *ngIf="filteredDocuments.length > 0" class="table table-bordered table-striped">
       <thead class="thead-dark">
       <tr>
         <th scope="col">#</th>
         <th scope="col">Name</th>
+        <th scope="col">Actions</th>
       </tr>
       </thead>
       <tbody>
-      <tr *ngFor="let document of documents">
+      <tr *ngFor="let document of filteredDocuments">
         <td>{{ document.id }}</td>
         <td>{{ document.name }}</td>
+        <td>
+          <button (click)="downloadFile(document.id)" class="btn btn-primary">Download</button>
+          <button (click)="deleteDocument(document.id)">Delete</button>
+        </td>
       </tr>
       </tbody>
     </table>

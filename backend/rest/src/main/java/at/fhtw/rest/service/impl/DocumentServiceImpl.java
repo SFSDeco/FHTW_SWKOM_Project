@@ -11,6 +11,8 @@ import at.fhtw.rest.service.minio.MinIOService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,25 +31,65 @@ public class DocumentServiceImpl implements DocumentService {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentServiceImpl.class);
 
+
+
     @Override
-    public void saveDocument(String documentDto, MultipartFile file) {
+    public void saveDocument(String documentName, MultipartFile file) {
         try {
-            // Lade das Dokument in MinIO hoch
-            String filePath = minioService.uploadDocument(documentDto, file);
-
-
-            // Speichere das Dokument in der Datenbank
             DocumentEntity documentEntity = DocumentEntity.builder()
-                    .name(documentDto)
-                    .content(filePath)  // Hier ggf. den Dateipfad oder andere Informationen speichern
+                    .name(documentName)
+                    .content("Placeholder") // Placeholder for file path, as upload happens later
                     .build();
-            documentMapper.mapToDto(documentRepository.save(documentEntity));
+
+            DocumentEntity savedEntity = documentRepository.save(documentEntity); // ID is generated here
+
+            String fileName = savedEntity.getId() + "_" + documentName;
+
+            String filePath = minioService.uploadDocument(documentName, file);
+
+            savedEntity.setContent(filePath);
+
+            //return documentMapper.mapToDto(savedEntity);
 
         } catch (IOException e) {
             logger.error("Error uploading file to MinIO", e); // Use logger instead of printStackTrace
             throw new RuntimeException("Error uploading file to MinIO", e);
         }
     }
+    @Override
+    public ResponseEntity<byte[]> getFile(Long id){
+        DocumentEntity document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        byte[] fileContent = minioService.downloadDocument(document.getContent()); // Lade Datei aus MinIO
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + document.getName())
+                .header(HttpHeaders.CONTENT_TYPE, "application/pdf") // Wichtig für den richtigen MIME-Typ
+                .body(fileContent);
+    }
+
+
+    @Override
+    public void deleteDocument(Long id) {
+        // Finde das Dokument aus der Datenbank
+        DocumentEntity document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        // Lösche die Datei aus MinIO
+        try {
+            minioService.deleteDocument(document.getContent()); // Verwendet den Pfad, der in der Datenbank gespeichert ist
+        } catch (IOException e) {
+            logger.error("Error deleting file from MinIO", e);
+            throw new RuntimeException("Error deleting file from MinIO", e);
+        }
+
+        // Lösche das Dokument aus der Datenbank
+        documentRepository.delete(document);
+    }
+
+
+
 
     @Override
     public List<DocumentDto> getAllDocuments() {

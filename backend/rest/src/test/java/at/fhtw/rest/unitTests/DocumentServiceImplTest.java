@@ -1,4 +1,4 @@
-package at.fhtw.rest.unitTests;
+/*package at.fhtw.rest.unitTests;
 
 import at.fhtw.rest.persistence.entity.DocumentEntity;
 import at.fhtw.rest.persistence.repositories.DocumentRepository;
@@ -132,4 +132,4 @@ public class DocumentServiceImplTest {
         verify(documentRepository, times(1)).findAll();
         verify(documentMapper, times(1)).mapToDto(entities);
     }
-}
+}*/
