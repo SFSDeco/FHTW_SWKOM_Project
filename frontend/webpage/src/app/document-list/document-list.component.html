@@ -26,7 +26,9 @@
         <td>{{ document.id }}</td>
         <td>{{ document.name }}</td>
         <td>
-          <button (click)="downloadFile(document.id)" class="btn btn-primary">Download</button>
+          <button (click)="downloadFile(document.id)">Download</button>
+          <button (click)="openFile(document.id)">Open</button>
+          <button (click)="navigateToUpdate(document.id)">Update</button>
           <button (click)="deleteDocument(document.id)">Delete</button>
         </td>
       </tr>

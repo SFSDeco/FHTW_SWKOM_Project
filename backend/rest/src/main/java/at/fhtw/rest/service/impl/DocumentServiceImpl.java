@@ -89,6 +89,26 @@ public class DocumentServiceImpl implements DocumentService {
         // Lösche das Dokument aus der Datenbank
         documentRepository.delete(document);
     }
+    @Override
+    public void updateDocument(Long id, String name, MultipartFile file) {
+        DocumentEntity document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        document.setName(name);
+
+        if (file != null) {
+            try {
+                String filePath = "file" + document.getId();
+                minioService.uploadDocument(filePath, file);
+                document.setContent(filePath);
+            } catch (IOException e) {
+                throw new RuntimeException("Error uploading file", e);
+            }
+        }
+
+        documentRepository.save(document);
+    }
+
 
 
 

@@ -41,4 +41,9 @@ export class DocumentService {
     return this.http.delete<void>(url);
   }
 
+  updateDocument(id: number, formData: FormData): Observable<void> {
+    const url = `${this.docsUrl}/update/${id}`;
+    return this.http.put<void>(url, formData);
+  }
+
 }

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DocumentService } from "../service/document.service";
 import { Document } from "../model/document";
 import { Router } from '@angular/router';
+import {saveAs} from "file-saver";
 
 @Component({
   selector: 'app-document-list',
@@ -45,21 +46,45 @@ export class DocumentListComponent implements OnInit {
     }
   }
 
-  downloadFile(id: number): void {
-    this.router.navigate([`/download/${id}`]);
-  }
+
 
   deleteDocument(id: number): void {
     this.documentService.deleteDocument(id).subscribe(
       response => {
         console.log('Document deleted successfully');
-        // Optionale Logik zum Entfernen des Dokuments aus der Ansicht
         this.loadDocuments(); // Neue Liste laden
       },
       error => {
         console.error('Error deleting document', error);
       }
     );
+  }
+  downloadFile(id: number): void {
+    this.documentService.downloadFile(id).subscribe(
+      (pdfBlob: Blob) => {
+        saveAs(pdfBlob, `document-${id}.pdf`);
+      },
+      (error) => {
+        console.error('Error downloading file', error);
+      }
+    );
+  }
+
+  openFile(id: number): void {
+
+    this.documentService.downloadFile(id).subscribe(
+      (pdfBlob: Blob) => {
+        const fileUrl = URL.createObjectURL(pdfBlob);
+        window.open(fileUrl, '_blank');
+      },
+      (error) => {
+        console.error('Error opening file', error);
+      }
+    );
+  }
+
+  navigateToUpdate(documentId: number): void {
+    this.router.navigate([`/update/${documentId}`]); // Navigiert zur Route /update/:id`
   }
 
 }

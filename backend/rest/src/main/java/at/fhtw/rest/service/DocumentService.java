@@ -13,6 +13,7 @@ public interface DocumentService {
     List<DocumentDto> getAllDocuments();
     ResponseEntity<byte[]> getFile(Long id);
     void deleteDocument(Long i);
+    void updateDocument(Long id, String name, MultipartFile file);
 
 
 }
