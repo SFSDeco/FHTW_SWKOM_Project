@@ -14,6 +14,6 @@ public interface DocumentService {
     ResponseEntity<byte[]> getFile(Long id);
     void deleteDocument(Long i);
     void updateDocument(Long id, String name, MultipartFile file);
-
+    ResponseEntity<DocumentDto> getDocument(Long id);
 
 }

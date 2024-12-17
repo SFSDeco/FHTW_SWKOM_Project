@@ -67,4 +67,8 @@ public class ApiController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/file/{id}")
+    public ResponseEntity<DocumentDto> getDocument(@PathVariable Long id) {
+        return documentService.getDocument(id);
+    }
 }
