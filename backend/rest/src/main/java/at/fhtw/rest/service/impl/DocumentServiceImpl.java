@@ -100,7 +100,8 @@ public class DocumentServiceImpl implements DocumentService {
 
         if (file != null) {
             try {
-                String filePath = "file" + document.getId();
+                minioService.deleteDocument(document.getContent());
+                String filePath = document.getId() + "_" + document.getName();
                 minioService.uploadDocument(filePath, file);
                 document.setContent(filePath);
             } catch (IOException e) {

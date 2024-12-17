@@ -28,6 +28,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = RestApplication.class)
@@ -94,7 +95,8 @@ public class DocumentServiceImplIntegrationTest {
 
         // Assert: Verify expected interactions and results
         Mockito.verify(minioService).uploadDocument(eq("1_TestDocument"), any(MultipartFile.class));
-        //Mockito.verify(documentRepository).save(any(DocumentEntity.class));
+        Mockito.verify(documentRepository, atLeastOnce()).save(any(DocumentEntity.class));
+
         Mockito.verify(documentMapper).mapToDto(any(DocumentEntity.class));
 
         // Assert the result of the method call
