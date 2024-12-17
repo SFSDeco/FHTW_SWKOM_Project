@@ -8,6 +8,7 @@ import at.fhtw.rest.service.dtos.DocumentDto;
 import at.fhtw.rest.service.rabbitmq.DocumentProducer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,11 +24,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 
 @SpringBootTest(classes = RestApplication.class)
 @Testcontainers
@@ -45,7 +45,6 @@ public class ApiControllerIntegrationTest {
     @MockBean
     private DocumentProducer documentProducer;
 
-
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
@@ -55,7 +54,6 @@ public class ApiControllerIntegrationTest {
 
     @BeforeEach
     void setup() {
-        // Clear any mocks if necessary
         Mockito.reset(documentService, documentProducer);
     }
 
@@ -69,6 +67,7 @@ public class ApiControllerIntegrationTest {
     void testGetAllDocuments() {
         // Arrange
         DocumentDto documentDto = new DocumentDto();
+        documentDto.setId(1L);
         documentDto.setName("Sample Document");
         when(documentService.getAllDocuments()).thenReturn(Collections.singletonList(documentDto));
 
@@ -87,29 +86,62 @@ public class ApiControllerIntegrationTest {
         // Arrange
         String documentName = "TestDocument";
         MockMultipartFile mockFile = new MockMultipartFile("file", "test.txt", "text/plain", "Sample content".getBytes());
-        Mockito.doNothing().when(documentService).saveDocument(any(), any());
+
+        // Simulate DocumentDto being returned after save
+        DocumentDto documentDto = new DocumentDto();
+        documentDto.setId(1L);
+        documentDto.setName(documentName);
+
+        when(documentService.saveDocument(any(), any())).thenReturn(documentDto);
+
+        // Capture the DTO sent to the RabbitMQ producer
+        ArgumentCaptor<DocumentDto> dtoCaptor = ArgumentCaptor.forClass(DocumentDto.class);
 
         // Act
-        ResponseEntity<DocumentEntity> response = apiController.uploadDocument(documentName, mockFile);
+        ResponseEntity<DocumentDto> response = apiController.uploadDocument(documentName, mockFile);
 
         // Assert
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isEqualTo(documentDto);
+
         verify(documentService).saveDocument(documentName, mockFile);
-        verify(documentProducer).sendDocumentEvent("Document created: " + documentName);
+        verify(documentProducer).sendDocumentEvent(dtoCaptor.capture());
+
+        // Validate the correct DocumentDto was sent
+        DocumentDto capturedDto = dtoCaptor.getValue();
+        assertThat(capturedDto.getId()).isEqualTo(1L);
+        assertThat(capturedDto.getName()).isEqualTo(documentName);
     }
 
     @Test
     void testUploadDocumentWithEmptyFile() {
         // Arrange
-        String documentName = "TestDocument";
+        String documentName = "EmptyFileDocument";
         MockMultipartFile mockFile = new MockMultipartFile("file", "", "text/plain", new byte[0]);
 
+        // Simulate DocumentDto being returned after save
+        DocumentDto documentDto = new DocumentDto();
+        documentDto.setId(2L);
+        documentDto.setName(documentName);
+
+        when(documentService.saveDocument(any(), any())).thenReturn(documentDto);
+
+        // Capture the DTO sent to the RabbitMQ producer
+        ArgumentCaptor<DocumentDto> dtoCaptor = ArgumentCaptor.forClass(DocumentDto.class);
+
         // Act
-        ResponseEntity<DocumentEntity> response = apiController.uploadDocument(documentName, mockFile);
+        ResponseEntity<DocumentDto> response = apiController.uploadDocument(documentName, mockFile);
 
         // Assert
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isEqualTo(documentDto);
+
         verify(documentService).saveDocument(documentName, mockFile);
-        verify(documentProducer).sendDocumentEvent("Document created: " + documentName);
+        verify(documentProducer).sendDocumentEvent(dtoCaptor.capture());
+
+        // Validate the correct DocumentDto was sent
+        DocumentDto capturedDto = dtoCaptor.getValue();
+        assertThat(capturedDto.getId()).isEqualTo(2L);
+        assertThat(capturedDto.getName()).isEqualTo(documentName);
     }
 }

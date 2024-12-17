@@ -34,9 +34,11 @@ import static org.mockito.Mockito.when;
 @Testcontainers
 public class DocumentServiceImplIntegrationTest {
 
+    // Use PostgreSQLContainer to simulate a real database environment
     @Container
     static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");
 
+    // Inject the service and mock the required beans
     @Autowired
     private DocumentServiceImpl documentService;
 
@@ -49,6 +51,7 @@ public class DocumentServiceImplIntegrationTest {
     @MockBean
     private MinIOService minioService;
 
+    // Configure dynamic properties for the test container
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
@@ -56,6 +59,7 @@ public class DocumentServiceImplIntegrationTest {
         registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
     }
 
+    // Reset mocks before each test to ensure clean state
     @BeforeEach
     void setup() {
         Mockito.reset(documentRepository, documentMapper, minioService);
@@ -63,7 +67,7 @@ public class DocumentServiceImplIntegrationTest {
 
     @Test
     void testSaveDocument() throws IOException {
-        // Arrange
+        // Arrange: Prepare test data
         String documentName = "TestDocument";
         MockMultipartFile mockFile = new MockMultipartFile("file", "test.txt", "text/plain", "Sample content".getBytes());
 
@@ -71,45 +75,57 @@ public class DocumentServiceImplIntegrationTest {
         String filePath = "minio/test/path/test.txt";
         when(minioService.uploadDocument(eq(documentName), any(MultipartFile.class))).thenReturn(filePath);
 
-        // Simulate saving to repository
+        // Simulate saving the document entity to the repository
         DocumentEntity savedEntity = DocumentEntity.builder()
+                .id(1L) // Set an ID to simulate saved entity
                 .name(documentName)
                 .content(filePath)
                 .build();
         when(documentRepository.save(any(DocumentEntity.class))).thenReturn(savedEntity);
 
-        // Simulate mapping
+        // Simulate mapping from entity to DTO
         DocumentDto documentDto = new DocumentDto();
+        documentDto.setId(1L);  // Ensure ID is set
         documentDto.setName(documentName);
         when(documentMapper.mapToDto(any(DocumentEntity.class))).thenReturn(documentDto);
 
-        // Act
-        documentService.saveDocument(documentName, mockFile);
+        // Act: Call the saveDocument method
+        DocumentDto result = documentService.saveDocument(documentName, mockFile);
 
-        // Assert
-        Mockito.verify(minioService).uploadDocument(eq(documentName), any(MultipartFile.class));
+        // Assert: Verify expected interactions and results
+        Mockito.verify(minioService).uploadDocument(eq("1_TestDocument"), any(MultipartFile.class));
         Mockito.verify(documentRepository).save(any(DocumentEntity.class));
         Mockito.verify(documentMapper).mapToDto(any(DocumentEntity.class));
+
+        // Assert the result of the method call
+        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo(documentName);
+        assertThat(result.getId()).isEqualTo(1L);
     }
 
     @Test
     void testGetAllDocuments() {
-        // Arrange
+        // Arrange: Prepare test data
         DocumentEntity documentEntity = DocumentEntity.builder()
+                .id(1L)  // Add ID for the document entity
                 .name("Sample Document")
                 .content("minio/sample/path")
                 .build();
+
+        // Simulate repository returning a list of documents
         when(documentRepository.findAll()).thenReturn(Collections.singletonList(documentEntity));
 
+        // Simulate mapping from entity to DTO
         DocumentDto documentDto = new DocumentDto();
+        documentDto.setId(1L);  // Ensure ID is set
         documentDto.setName("Sample Document");
         when(documentMapper.mapToDto(Collections.singletonList(documentEntity)))
                 .thenReturn(Collections.singletonList(documentDto));
 
-        // Act
+        // Act: Call the getAllDocuments method
         List<DocumentDto> result = documentService.getAllDocuments();
 
-        // Assert
+        // Assert: Verify expected interactions and results
         assertThat(result).isNotNull();
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.get(0).getName()).isEqualTo("Sample Document");

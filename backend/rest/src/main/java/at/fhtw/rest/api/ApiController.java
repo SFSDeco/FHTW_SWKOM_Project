@@ -36,11 +36,13 @@ public class ApiController {
     }
 
     @PostMapping("/{document}")
-    public ResponseEntity<DocumentEntity> uploadDocument(@PathVariable("document") String documentName,
+    public ResponseEntity<DocumentDto> uploadDocument(@PathVariable("document") String documentName,
                                                          @RequestParam("file") MultipartFile file) {
 
-        documentProducer.sendDocumentEvent(documentService.saveDocument(documentName, file));
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        DocumentDto documentDto = documentService.saveDocument(documentName, file);
+
+        documentProducer.sendDocumentEvent(documentDto);
+        return new ResponseEntity<>(documentDto, HttpStatus.CREATED);
     }
 
 }

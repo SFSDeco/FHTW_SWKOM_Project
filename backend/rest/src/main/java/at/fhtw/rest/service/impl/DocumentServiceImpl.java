@@ -34,7 +34,7 @@ public class DocumentServiceImpl implements DocumentService {
         try {
             DocumentEntity documentEntity = DocumentEntity.builder()
                     .name(documentName)
-                    .content("") // Placeholder for file path, as upload happens later
+                    .content("Placeholder") // Placeholder for file path, as upload happens later
                     .build();
 
             DocumentEntity savedEntity = documentRepository.save(documentEntity); // ID is generated here
@@ -44,9 +44,8 @@ public class DocumentServiceImpl implements DocumentService {
             String filePath = minioService.uploadDocument(fileName, file);
 
             savedEntity.setContent(filePath);
-            DocumentEntity updatedEntity = documentRepository.save(savedEntity);
 
-            return documentMapper.mapToDto(updatedEntity);
+            return documentMapper.mapToDto(savedEntity);
 
         } catch (IOException e) {
             logger.error("Error uploading file to MinIO", e); // Use logger instead of printStackTrace

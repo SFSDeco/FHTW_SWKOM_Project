@@ -17,7 +17,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@Document(indexName = "documents")
 public class DocumentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
